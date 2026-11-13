@@ -87,3 +87,20 @@ JOIN Departments d
     ON e.dept_id = d.dept_id
 GROUP BY d.dept_name;
 
+
+--------------
+
+-- Question 7: Find the second-highest salary in each department.
+-- Display department name and second-highest salary.
+
+     SELECT e.emp_name,d.dept_name,e.salary,
+     (SELECT AVG(e2.salary) FROM Employees e2
+         WHERE e2.dept_id = e.dept_id) AS Dept_avgsalary
+         FROM Employees e
+         JOIN Departments d
+           WHERE e.salary >(
+             SELECT AVG(e3.salary) FROM Employees e3
+                WHERE e3.dept_id = e.dept_id
+           )
+           ORDER BY e.salary DESC;
+
