@@ -104,3 +104,212 @@ GROUP BY d.dept_name;
            )
            ORDER BY e.salary DESC;
 
+--8Find employees whose salary is greater than their department's average salary, but less than the highest salary in the company.
+
+--Display:
+--Employee name
+--Department name
+--Salary
+--Department average salary
+
+     SELECT e.emp_name,d.dept_name,e.salary,
+	 (SELECT AVG(e2.salary)FROM Employees e2
+	 WHERE e2.dept_id = e.dept_id) AS dept_avgsalary
+	 FROM Employees e
+	 JOIN Departments d
+	 ON e.dept_id = d.dept_id
+	 WHERE e.salary >(
+	    SELECT AVG(e3.salary) FROM Employees e3
+		WHERE e3.dept_id = e.dept_id 
+		)
+		AND e.salary <(
+             SELECT MAX(e4.salary) FROM Employees e4
+			
+		)
+	     ORDER BY e.salary DESC;
+
+--9 Find employees who earn more than the average salary of their department and work in departments having at least 3 employees.
+
+--Display:
+--Employee name
+--Department name
+--Salary
+--Department employee count
+--Sort by salary in descending order.
+
+    SELECT e.emp_name,d.dept_name,e.salary,
+	( SELECT COUNT(e2.emp_id)FROM Employees e2
+	   WHERE e2.dept_id = e.dept_id) AS Dept_EmpCount
+	   FROM Employees e
+	   JOIN Departments d
+	   ON e.dept_id = d.dept_id
+	   WHERE e.salary > (
+                SELECT AVG(e3.salary) FROM Employees e3
+				WHERE e3.dept_id = e.dept_id
+	   )
+	   AND e.dept_id IN (
+               SELECT e.dept_id FROM Employees e4
+			   GROUP BY e.dept_id
+			   HAVING COUNT(*)>=3
+	   )
+	    ORDER BY e.salary DESC;
+
+ --10 -- Find employees who earn more than the average salary of the company, but less than the average salary of their department.
+
+--Expected Output:
+---Employee Name
+-- Department Name
+--Salary
+--Company Average Salary
+--Sorting: Salary in ascending order (ASC).
+
+     SELECT e.emp_name,d.dept_name,e.salary,
+	   (SELECT AVG(e2.salary) FROM Employees e2) AS Comp_avgsalary
+	         FROM Employees e
+		   JOIN Departments d
+		   ON e.dept_id = d.dept_id
+		   WHERE e.salary >(
+                   SELECT AVG(e3.salary)FROM Employees e3
+		   )
+		   AND e.salary < (
+             SELECT AVG(e4.salary) FROM Employees e4
+			 WHERE e4.dept_id = e.dept_id
+		   )
+		   ORDER BY e.salary ASC;
+
+--11 	 --Find departments where the total salary is greater than the company's average total salary per department.
+
+--Display:
+--Department Name
+--Total Salary
+--Number of Employees
+--sort by Total Salary in descending order.
+
+SELECT
+    d.dept_name,
+    SUM(e.salary) AS Total_salary,
+    COUNT(e.emp_id) AS Num_emp
+FROM Employees e
+JOIN Departments d
+    ON e.dept_id = d.dept_id
+GROUP BY d.dept_name, d.dept_id
+HAVING SUM(e.salary) > (
+    SELECT AVG(Dept_Total)
+    FROM (
+        SELECT SUM(e2.salary) AS Dept_Total
+        FROM Employees e2
+        GROUP BY e2.dept_id
+    ) AS Dept_Summary
+)
+ORDER BY Total_salary DESC;
+
+--12 Find employees who earn the highest salary in their respective departments.
+
+--Display:
+--Employee Name
+--Department Name
+--Salary
+--Department Name's total employee count
+--If multiple employees share the highest salary in a department, display all of them.
+
+--Sort by salary in descending order.
+
+    SELECT e.emp_name,d.dept_name,e.salary,
+	   (SELECT COUNT(e2.emp_id) FROM Employees e2
+	       WHERE e2.dept_id = e.dept_id) AS Dept_empcount
+		  FROM Employees e
+		  JOIN Departments d
+		  ON e.dept_id = d.dept_id
+		      WHERE e.salary = (
+                   SELECT MAX(e3.salary) FROM Employees e3
+				   WHERE e3.dept_id = e.dept_id
+			  )
+			   ORDER BY e.salary DESC;
+
+---13---Find employees whose salary is greater than the second-highest salary of their department.
+
+--Display:
+--Employee Name
+--Department Name
+--Salary
+--Department's Second-Highest Salary
+--Sort by salary in descending order.
+
+    SELECT e.emp_name,d.dept_name,e.salary,
+	( SELECT MAX(e2.salary)FROM Employees e2
+	    WHERE e2.dept_id = e.dept_id
+		AND e2.salary <(
+               SELECT MAX(e3.salary)FROM Employees e3
+			   WHERE e3.dept_id = e.dept_id
+		) 
+		)AS Dept_secondhigest_salary
+		FROM Employees e
+		JOIN Departments d
+		ON e.dept_id = d.dept_id
+		WHERE e.salary >(
+            SELECT MAX(e4.salary) FROM Employees e4
+			WHERE e4.dept_id = e.dept_id
+			AND e4.salary <(
+              SELECT MAX(e5.salary) FROM Employees e5
+			  WHERE e5.dept_id = e.dept_id
+			)
+		)
+		ORDER BY e.salary DESC;
+
+
+--14Find departments where the highest-paid employee earns more than ₹90,000 and the department has at least 3 employees.
+
+--Display:
+--Department Name
+--Highest Salary
+--Average Salary
+--Total Employees
+--Sort by Highest Salary in descending order.
+
+    SELECT d.dept_name,MAX(e.salary) AS Higest_salary,
+	    AVG(e.salary) AS AVG_salary,
+		COUNT(e.emp_id) AS Count_emp
+		 FROM Employees e
+		 JOIN Departments d
+		 ON e.dept_id = d.dept_id
+		 WHERE e.salary = (
+                SELECT MAX(e2.salary)FROM Employees e2
+				WHERE e2.dept_id = e.dept_id
+		 )
+		 GROUP BY d.dept_id ,d.dept_name
+		 HAVING COUNT(*)>=3
+		 AND MAX(e.salary) > 90000
+		   ORDER BY Higest_salary DESC;
+
+--15--Find employees who earn more than their department's average salary, and their department's total salary must be greater than ₹2,00,000.
+
+--Display:
+---Employee Name
+---Department Name
+-- Salary
+--Department Average Salary
+--Department Total Salary
+--Sort by Department Total Salary in descending order.
+
+   SELECT e.emp_name,D.dept_name,e.salary,
+     (SELECT AVG(e2.salary)FROM Employees e2
+	    WHERE e2.dept_id = e.dept_id)AS Dept_avgsalary,
+		 (SELECT SUM(e3.salary)FROM Employees e3
+		    WHERE e3.dept_id = e.dept_id)AS dept_total
+			FROM Employees e
+			JOIN Departments d
+			ON e.dept_id = d.dept_id
+			 WHERE e.salary > (
+                     SELECT AVG(e4.salary) FROM Employees e4
+					 WHERE e4.dept_id = e.dept_id
+			 )
+			 AND  (
+               SELECT SUM(e5.salary)FROM Employees e5
+			   WHERE e5.dept_id = d.dept_id
+			  
+			 )>200000
+
+			  ORDER BY dept_total DESC;
+
+ 
+
